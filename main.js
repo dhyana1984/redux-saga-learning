@@ -1,9 +1,10 @@
-import "@babel/polyfill"
+import "babel-polyfill"
 
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { createStore, applyMiddleware } from 'redux'
 import createSagaMiddleware from 'redux-saga'
+
 import Counter from './Counter'
 import reducer from './reducers'
 import rootSaga from './sagas'
