@@ -1,8 +1,10 @@
+
+import { put, takeEvery, all, call, takeLatest } from 'redux-saga/effects'
+import * as Api from './api'
+
 export function* helloSaga() {
   console.log('Hello Sagas!')
 }
-
-import { put, takeEvery, all, call } from 'redux-saga/effects'
 
 /*
  * We create a delay function that returns a Promise that will resolve after a specified number of milliseconds. 
@@ -54,6 +56,29 @@ export function* watchIncrementAsync() {
   yield takeEvery('INCREMENT_ASYNC', incrementAsync)
 }
 
+function* watchFetchProducts() {
+  /*
+   * takeEvery allows multiple fetchData instances to be started concurrently
+   */
+  // yield takeEvery('PRODUCTS_REQUESTED', fetchProducts)
+
+  /*
+   * If we want to only get the response of the latest request fired (e.g. to always display the latest version of data) we can use the takeLatest
+   * takeLatest allows only one fetchData task to run at any moment
+   */
+  yield takeLatest('PRODUCTS_REQUESTED', fetchProducts)
+
+}
+
+export function* fetchProducts() {
+  try {
+    const products = yield call(Api.fetch, '/products')
+    yield put({ type: 'PRODUCTS_REQUESTED_REAL', products })
+  } catch (error) {
+    yield put({ type: 'PRODUCTS_REQUESTED_FAILED', error })
+  }
+}
+
 /*
  * Need to start them both at once 
  * Add a rootSaga that is responsible for starting our Sagas
@@ -62,6 +87,7 @@ export function* watchIncrementAsync() {
 export default function* rootSaga() {
   yield all([
     helloSaga(),
-    watchIncrementAsync()
+    watchIncrementAsync(),
+    watchFetchProducts()
   ])
 }
