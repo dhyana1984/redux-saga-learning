@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 
-const Counter = ({ value, onIncrement, onDecrement, onIncrementAsync, onFetchProductAsync }) =>
+const Counter = ({ value, onIncrement, onDecrement, onIncrementAsync, onFetchProductAsync, onFetchDE43Async }) =>
   <div>
     <button onClick={onIncrementAsync}>
       Increment after 1 second
@@ -16,6 +16,10 @@ const Counter = ({ value, onIncrement, onDecrement, onIncrementAsync, onFetchPro
     {' '}
     <button onClick={onFetchProductAsync}>
       Fetch Product
+    </button>
+    {' '}
+    <button onClick={onFetchDE43Async}>
+      Fetch DE43
     </button>
     <hr />
     <div>

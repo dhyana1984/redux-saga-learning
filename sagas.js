@@ -1,5 +1,6 @@
 
-import { put, takeEvery, all, call, takeLatest } from 'redux-saga/effects'
+import { channel } from 'redux-saga'
+import { put, takeEvery, all, call, takeLatest, fork, apply, take } from 'redux-saga/effects'
 import * as Api from './api'
 
 export function* helloSaga() {
@@ -72,10 +73,48 @@ function* watchFetchProducts() {
 
 export function* fetchProducts() {
   try {
-    const products = yield call(Api.fetch, '/products')
+    const products = yield call(Api.fetchProducts, '/products')
     yield put({ type: 'PRODUCTS_REQUESTED_REAL', products })
   } catch (error) {
     yield put({ type: 'PRODUCTS_REQUESTED_FAILED', error })
+  }
+}
+
+/*
+ *  CHANNEL_TEST action listener
+ */
+function* watchRequests() {
+  const chan = yield call(channel)
+
+  /*
+   * Launch 3 worker task at the same time to handle maxmum 3 task at the same time 
+   */
+  for (let i = 0; i < 3; i++) {
+    yield fork(channelHanlder, chan)
+  }
+
+  /*
+   * Keep listening CHANNEL_TEST action  
+   */
+  while (true) {
+    const { payload } = yield take('CHANNEL_TEST')
+    /*
+     * Dispatch payload to Channel to trigger Channel handler
+     */
+    yield put(chan, payload)
+  }
+}
+
+/* 
+ * Channel listener. This handler will be triggered when put payload to this channel
+ */
+function* channelHanlder(chan) {
+  // Need to run all the time in while (true)
+  while (true) {
+    const payload = yield take(chan)
+    const result = yield call(Api.fetchDE43)
+    const text = yield result.text()
+    yield apply(console, console.log, [{ response: text, payload }])
   }
 }
 
@@ -88,6 +127,7 @@ export default function* rootSaga() {
   yield all([
     helloSaga(),
     watchIncrementAsync(),
-    watchFetchProducts()
+    watchFetchProducts(),
+    watchRequests()
   ])
 }

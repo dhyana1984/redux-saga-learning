@@ -31,8 +31,8 @@ test('fetchProducts Saga test', (assert) => {
 
     assert.deepEqual(
         generator.next().value,
-        call(Api.fetch, '/products'),
-        'fetchProducts should yield an Effect call(Api.fetch, "/products")'
+        call(Api.fetchProducts, '/products'),
+        'fetchProducts should yield an Effect call(Api.fetchProducts, "/products")'
     )
 
     // create a fake response
@@ -52,8 +52,8 @@ test('fetchProducts Saga test with error', (assert) => {
 
     assert.deepEqual(
         generator.next().value,
-        call(Api.fetch, '/products'),
-        'fetchProducts should yield an Effect call(Api.fetch, "/products")'
+        call(Api.fetchProducts, '/products'),
+        'fetchProducts should yield an Effect call(Api.fetchProducts, "/products")'
     )
 
     //Test error

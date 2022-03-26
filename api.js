@@ -1,4 +1,6 @@
-export const fetch = (url) => {
+
+
+export const fetchProducts = (url) => {
     if (url = '/products') {
         const product = { productId: 1, productName: 'Cup' }
         return new Promise((resolve, reject) => {
@@ -6,3 +8,5 @@ export const fetch = (url) => {
         })
     }
 }
+
+export const fetchDE43 = async () => await fetch('https://qqlykm.cn/api/yan/yd.php?city=2019-6-18')
