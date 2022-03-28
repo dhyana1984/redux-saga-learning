@@ -1,6 +1,6 @@
 
 import { channel } from 'redux-saga'
-import { put, takeEvery, all, call, takeLatest, fork, apply, take } from 'redux-saga/effects'
+import { put, takeEvery, all, call, takeLatest, fork, apply, take, select, cancel, cancelled } from 'redux-saga/effects'
 import * as Api from './api'
 
 export function* helloSaga() {
@@ -118,6 +118,105 @@ function* channelHanlder(chan) {
   }
 }
 
+function* watchAndLog() {
+  yield takeEvery('*', function* logger(action) {
+    const state = yield select()
+
+    console.log('action: ', action)
+    console.log('state after', state)
+  })
+
+  /*
+   * Use take to implement takeEvery: put the logic in while (true) block
+   */
+  // while (true) {
+  //   const action = yield take('*')
+  //   const state = yield select()
+
+  //   console.log('action: ', action)
+  //   console.log('state after', state)
+  // }
+}
+
+/* BEGIN
+ * Some concurrency defect samples
+ */
+
+//----defect sample----//
+function* authorize(user, password) {
+  try {
+    const token = yield call(Api.authorize, user, password)
+    yield put({ type: 'LOGIN_SUCCESS', token })
+    return token
+  } catch (error) {
+    yield put({ type: 'LOGIN_ERROR', error })
+  }
+}
+
+function* loginFlow() {
+  while (true) {
+    const { user, password } = yield take('LOGIN_REQUEST')
+    /*
+     * The defect here!!, if user click Login, and block by authorize then click Logout, the 'LOGOUT' action will be missed
+     */
+    const token = yield call(authorize, user, password)
+    if (token) {
+      yield call(Api.storeItem, { token })
+      yield take('LOGOUT')
+      yield call(Api.clearItem, 'token')
+    }
+  }
+}
+//----defect sample----//
+
+//----To fix above defect----//
+function* authorize(user, password) {
+  try {
+    const token = yield call(Api.authorize, user, password)
+    yield put({ type: 'LOGIN_SUCCESS', token })
+    yield call(Api.storeItem, { token })
+    return token
+  } catch (error) {
+    yield put({ type: 'LOGIN_ERROR', error })
+  } finally {
+    /*
+     * cancelled task can handle any cancellation logic (as well as any other type of completion) in its finally block. 
+     * Since a finally block execute on any type of completion (normal return, error, or forced cancellation) 
+     */
+    if (yield cancelled()) {
+      /*
+       * put special cancellation handling code here
+       * like set the loading as false and set the API satus as idle
+       */
+    }
+  }
+}
+
+function* loginFlow() {
+  while (true) {
+    const { user, password } = yield take('LOGIN_REQUEST')
+    /*
+     * Use fork to create a backend task running  authorize
+     * yield fork results in a Task Object
+     */
+    const task = yield fork(authorize, user, password)
+    const action = yield take(['LOGOUT', 'LOGIN_ERROR'])
+    if (action.type == 'LOGOUT') {
+      /*
+       * If use click logout when pending on authorize, cancel the authorize task
+       */
+      yield cancel(task)
+    }
+    yield call(Api.clearItem, 'token')
+  }
+}
+//----To fix the defect----//
+
+/* END
+ * Some concurrency defect samples
+ */
+
+
 /*
  * Need to start them both at once 
  * Add a rootSaga that is responsible for starting our Sagas
@@ -128,6 +227,7 @@ export default function* rootSaga() {
     helloSaga(),
     watchIncrementAsync(),
     watchFetchProducts(),
-    watchRequests()
+    watchRequests(),
+    watchAndLog()
   ])
 }
