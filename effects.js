@@ -6,6 +6,6 @@ function* watchFetchProducts(params) {
 }
 
 function* fetchProducts() {
-    const products = yield Api.fetch('/products')
+    const products = yield Api.fetchProducts('/products')
     console.log(products)
 }

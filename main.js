@@ -14,7 +14,7 @@ const sagaMiddleware = createSagaMiddleware()
 const store = createStore(reducer, applyMiddleware(sagaMiddleware))
 sagaMiddleware.run(rootSaga)
 
-const action = type => store.dispatch({ type })
+const action = type => store.dispatch({ type, payload: '2022-03-27' })
 
 function render() {
   ReactDOM.render(
@@ -24,6 +24,7 @@ function render() {
       onDecrement={() => action('DECREMENT')}
       onIncrementAsync={() => action('INCREMENT_ASYNC')}
       onFetchProductAsync={() => action('PRODUCTS_REQUESTED')}
+      onFetchDE43Async={() => action('CHANNEL_TEST')}
     />,
     document.getElementById('root')
   )
