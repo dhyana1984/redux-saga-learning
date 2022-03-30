@@ -216,6 +216,50 @@ function* loginFlow() {
  * Some concurrency defect samples
  */
 
+//-----race sample------//
+function* fetchPostsWithTimeout() {
+  /*
+ * if fetchApi cost more than 1 second, then will return timeout
+ */
+  const { posts, timeout } = yield race({
+    posts: call(Api.fetchProducts, '/products'),
+    timeout: delay(1000)
+  })
+
+
+  if (posts)
+    yield put({ type: 'POSTS_RECEIVED', posts })
+  else
+    yield put({ type: 'TIMEOUT_ERROR' })
+}
+
+function* backgroundTask() {
+  while (true) {
+    //call API to get data
+  }
+}
+
+function* watchStartBackgroundTask() {
+  while (true) {
+    /*
+     * click button to dispatch START_BACKGROUND_TASK action to start get data
+     */
+    yield take('START_BACKGROUND_TASK')
+    yield race({
+      /*
+       * In the case a CANCEL_TASK action is dispatched, 
+       * the race Effect will automatically cancel backgroundTask by throwing a cancellation error inside it. 
+       */
+      task: call(backgroundTask),
+      /*
+       * click calcel button to cancel the get date task
+       */
+      cancel: take('CANCEL_TASK')
+    })
+  }
+}
+
+//-----race sample------//
 
 /*
  * Need to start them both at once 
