@@ -267,11 +267,27 @@ function* watchStartBackgroundTask() {
  * This means the two resulting Generators will be started in parallel as in a array
  */
 export default function* rootSaga() {
-  yield all([
-    helloSaga(),
-    watchIncrementAsync(),
-    watchFetchProducts(),
-    watchRequests(),
-    watchAndLog()
-  ])
+  /*
+   *  all effect is blocking, so code after all-effect is executed when all children sagas complete
+   */
+  // yield all([
+  //   helloSaga(),
+  //   watchIncrementAsync(),
+  //   watchFetchProducts(),
+  //   watchRequests(),
+  //   watchAndLog()
+  // ])
+
+  /*
+   * fork effects are non-blocking so code after fork-effect is executed immediately after yielding the fork effects 
+   * also we can get task descriptors when using fork effects
+   * so in the subsequent code you can cancel/join the forked task via task descriptors
+   */
+  yield fork(helloSaga)
+  yield fork(watchIncrementAsync)
+  yield fork(watchFetchProducts)
+  yield fork(watchRequests)
+  yield fork(watchAndLog)
+
+  // code after above
 }
