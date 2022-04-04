@@ -289,5 +289,19 @@ export default function* rootSaga() {
   yield fork(watchRequests)
   yield fork(watchAndLog)
 
+  /**
+   * another popular Root Saga pattern
+   */
+  //  const [task1, task2, task3] = yield all([ fork(saga1), fork(saga2), fork(saga3) ])
+
+  /* Avoid nesting fork effects in race effec
+   * DO NOT DO THIS. The fork effect always wins the race immediately.
+  */
+  // yield race([
+  //   fork(someSaga),
+  //   take('SOME-ACTION'),
+  //   somePromise,
+  // ])
+
   // code after above
 }
